@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Versus Revise - Right Hand Edition</title>
+    <title>Versus Revise - 7-Reel Layout</title>
     <style>
-        /* 基本設定：はみ出し防止のためbox-sizingを徹底 */
         * { box-sizing: border-box; }
         body { background-color: #121212; color: #fff; font-family: sans-serif; margin: 0; padding: 5px; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
-        /* 状態タブ */
+        /* 状態タブ：維持 */
         .state-tabs { display: flex; width: 100%; background: #222; border: 1px solid #444; border-radius: 4px; overflow: hidden; margin-bottom: 5px; flex-shrink: 0; }
         .state-tab { flex: 1; text-align: center; padding: 12px 2px; font-size: 11px; font-weight: bold; cursor: pointer; border-bottom: 3px solid transparent; }
         .tab-hazure.active { background: #eee; color: #000; }
@@ -17,20 +16,12 @@
         .tab-seven.active { background: #d50000; color: #fff; }
         .tab-bar.active { background: #000; color: #fff; border-bottom: 3px solid #777; }
 
-        /* メインエリア：左右レイアウト */
-        .main-content { 
-            display: flex; 
-            flex-direction: row-reverse; /* 右リール・左リスト */
-            flex: 1; 
-            overflow: hidden; 
-            gap: 4px; 
-            width: 100%;
-        }
+        .main-content { display: flex; flex-direction: row-reverse; flex: 1; overflow: hidden; gap: 4px; width: 100%; }
 
-        /* 右側（赤枠）：リールエリア（幅を少し絞って右端を確保） */
+        /* 右側：7コマリールエリア */
         .reel-frame { 
-            width: 110px; 
-            height: 240px; 
+            width: 100px; 
+            height: 490px; /* 70px * 7コマ */
             background: #000; 
             border: 2px solid #444; 
             border-radius: 8px; 
@@ -40,32 +31,57 @@
             touch-action: none;
         }
         .reel-window { height: 100%; display: flex; flex-direction: column; }
-        .symbol { height: 80px; display: flex; align-items: center; border-bottom: 1px solid #222; }
-        .index-num { width: 22px; color: #ffd700; text-align: center; font-size: 10px; font-weight: bold; }
+        .symbol { height: 70px; display: flex; align-items: center; border-bottom: 1px solid #1a1a1a; }
+        .index-num { width: 20px; color: #ffd700; text-align: center; font-size: 9px; font-weight: bold; }
         .symbol-image { flex-grow: 1; height: 100%; background-image: url('reel.png'); background-size: 100% 2100%; }
-        .center-line { position: absolute; top: 80px; left: 0; width: 100%; height: 80px; border-top: 2px solid #ffd700; border-bottom: 2px solid #ffd700; background: rgba(255, 215, 0, 0.08); pointer-events: none; z-index: 10; }
-
-        /* 左側（青枠）：結果リスト（字を小さく、パディングを調整） */
-        .result-area { 
-            flex: 1; 
-            background: #1a1a1a; 
-            border: 1px solid #333; 
-            border-radius: 4px; 
-            overflow-y: auto;
-            min-width: 0; /* flex内の子要素のはみ出し防止 */
+        
+        /* 中央3コマの赤枠ガイド */
+        .center-guide { 
+            position: absolute; 
+            top: 140px; /* 70px * 2コマ分飛ばした位置 */
+            left: 0; 
+            width: 100%; 
+            height: 210px; /* 70px * 3コマ */
+            border: 3px solid #ff0000; 
+            background: rgba(255, 0, 0, 0.05); 
+            pointer-events: none; 
+            z-index: 10;
+            box-shadow: inset 0 0 10px rgba(255, 0, 0, 0.3);
         }
-        .flag-list { padding: 4px; display: flex; flex-direction: column; gap: 3px; }
-        .flag-item { padding: 6px 4px; border-radius: 2px; border-left: 4px solid rgba(0,0,0,0.5); }
-        .flag-item div { font-size: 12px; font-weight: bold; margin-bottom: 2px; }
-        .flag-item small { color: #ccc; font-size: 10px; display: block; word-break: break-all; }
 
-        /* 色定義 */
-        .c-rep { background: rgba(0, 229, 255, 0.1); color: #00e5ff; } 
-        .c-bell { background: rgba(255, 234, 0, 0.1); color: #ffea00; } 
-        .c-suika { background: rgba(0, 200, 83, 0.1); color: #00c853; } 
-        .c-cher { background: rgba(245, 0, 87, 0.1); color: #f50057; }
-        .c-hazure { background: #2a2a2a; color: #ccc; }
-        .c-tok { background: rgba(170, 0, 255, 0.15); color: #e040fb; }
+        /* 左側：結果リスト（横並び調整） */
+        .result-area { flex: 1; background: #1a1a1a; border: 1px solid #333; border-radius: 4px; overflow-y: auto; min-width: 0; }
+        .flag-list { padding: 4px; display: flex; flex-direction: column; gap: 2px; }
+        
+        .flag-item { 
+            display: flex; 
+            align-items: center; 
+            padding: 5px 4px; 
+            border-radius: 2px; 
+            border-left: 3px solid rgba(0,0,0,0.5); 
+        }
+        .flag-name { 
+            font-size: 11px; 
+            font-weight: bold; 
+            width: 65px; /* 役名の幅を固定して数字の開始位置を揃える */
+            flex-shrink: 0;
+        }
+        .flag-data { 
+            font-size: 11px; 
+            color: #ccc; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis;
+            font-family: monospace;
+        }
+
+        /* 色定義：背景を薄くして視認性アップ */
+        .c-rep { background: rgba(0, 229, 255, 0.08); color: #00e5ff; } 
+        .c-bell { background: rgba(255, 234, 0, 0.08); color: #ffea00; } 
+        .c-suika { background: rgba(0, 200, 83, 0.08); color: #00c853; } 
+        .c-cher { background: rgba(245, 0, 87, 0.08); color: #f50057; }
+        .c-hazure { background: rgba(255, 255, 255, 0.05); color: #ccc; }
+        .c-tok { background: rgba(170, 0, 255, 0.1); color: #e040fb; }
     </style>
 </head>
 <body>
@@ -79,7 +95,7 @@
 
     <div class="main-content">
         <div id="reel-touch" class="reel-frame">
-            <div class="center-line"></div>
+            <div class="center-guide"></div>
             <div id="reel-window" class="reel-window"></div>
         </div>
 
@@ -89,7 +105,6 @@
     </div>
 
 <script>
-    // データ部分はそのまま維持
     const FLAG_DEFS = [
         { k: "hazure", n: "ハズレ", c: "hazure" }, { k: "normal_rep", n: "通常リプ", c: "rep" },
         { k: "jac_rep", n: "JACリプ", c: "rep" }, { k: "rt_rep", n: "RTリプ", c: "rep" },
@@ -110,12 +125,7 @@
         frame.addEventListener('touchstart', e => startY = e.touches[0].pageY);
         frame.addEventListener('touchend', e => {
             const diff = startY - e.changedTouches[0].pageY;
-            if (Math.abs(diff) > 30) moveReel(diff > 0 ? 1 : -1);
-        });
-        frame.addEventListener('mousedown', e => startY = e.pageY);
-        frame.addEventListener('mouseup', e => {
-            const diff = startY - e.pageY;
-            if (Math.abs(diff) > 30) moveReel(diff > 0 ? 1 : -1);
+            if (Math.abs(diff) > 20) moveReel(diff > 0 ? 1 : -1);
         });
         updateView();
     }
@@ -136,13 +146,16 @@
     function updateView() {
         const win = document.getElementById('reel-window');
         win.innerHTML = '';
-        [currentCenter + 1, currentCenter, currentCenter - 1].forEach((idx) => {
-            let r = (idx > 21) ? 1 : (idx < 1) ? 21 : idx;
+        // 7コマ分（中心から±3コマ）を表示
+        for (let i = 3; i >= -3; i--) {
+            let r = currentCenter + i;
+            while (r > 21) r -= 21;
+            while (r < 1) r += 21;
             const d = document.createElement('div');
             d.className = 'symbol';
             d.innerHTML = `<div class="index-num">${r}</div><div class="symbol-image" style="background-position:0% ${(21-r)*5}%"></div>`;
             win.appendChild(d);
-        });
+        }
         updateResults();
     }
 
@@ -164,8 +177,8 @@
             if (matches.length > 0) {
                 const item = document.createElement('div');
                 item.className = `flag-item c-${f.c}`;
-                // 「狙い：」を削除し、結果のみ表示
-                item.innerHTML = `<div>${f.n}</div><small>${matches.join(', ')}</small>`;
+                // 横並びのレイアウトを生成
+                item.innerHTML = `<div class="flag-name">${f.n}</div><div class="flag-data">${matches.join(', ')}</div>`;
                 list.appendChild(item);
             }
         });
