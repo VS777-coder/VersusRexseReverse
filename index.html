@@ -2,75 +2,110 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Versus Revise - Debug Mode Edition</title>
+    <title>Versus Revise - Professional Edition</title>
     <style>
-        body { background-color: #1a1a1a; color: #fff; font-family: sans-serif; margin: 0; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
-        .main-container { display: flex; gap: 20px; width: 95%; height: 95vh; max-width: 1000px; align-items: stretch; }
+        body { background-color: #1a1a1a; color: #fff; font-family: sans-serif; margin: 0; min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding-top: 20px; overflow-y: auto; }
+        .main-container { display: flex; gap: 20px; width: 98%; max-width: 1100px; align-items: flex-start; }
         
-        .reel-area-wrapper { display: flex; gap: 15px; flex-shrink: 0; align-items: flex-start; }
-        .reel-column { width: 95px; display: flex; flex-direction: column; background: #000; border: 4px solid #333; box-sizing: border-box; }
-        .right-wrapper { margin-top: 37.5px; }
+        /* リールフォーム容器 */
+        .reel-form-container { 
+            display: flex; gap: 15px; padding: 15px; 
+            background: #222; border: 2px solid #444; border-radius: 8px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        /* リール列：番号エリアを確保するために幅を調整 */
+        .reel-column { width: 130px; display: flex; flex-direction: column; background: #000; border: 4px solid #333; box-sizing: border-box; }
+        .right-wrapper { margin-top: 40px; } /* 中リール想定のオフセット */
 
         .symbol { 
-            position: relative; height: 75px; width: 100%; 
-            display: flex; align-items: center; justify-content: center; 
+            position: relative; 
+            height: 80px; /* 歪み防止のための高さ調整 */
+            width: 100%; 
+            display: flex; align-items: center; 
             border-bottom: 1px solid #222; box-sizing: border-box; cursor: pointer;
+            overflow: hidden;
         }
-        .symbol-image { width: 80%; height: 100%; background-image: url('reel.png'); background-size: 100% 2100%; pointer-events: none; }
-        .index-num { position: absolute; left: 4px; font-size: 11px; font-weight: bold; color: #ffd700; z-index: 10; }
 
-        /* 3コマ赤枠 */
+        /* 配列番号エリア：独立させて見やすく */
+        .index-num { 
+            width: 30px; height: 100%; 
+            background: #111; color: #ffd700;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: bold; border-right: 1px solid #333;
+            flex-shrink: 0;
+        }
+
+        /* 図柄画像エリア：歪み防止 */
+        .symbol-image { 
+            flex-grow: 1; height: 100%; 
+            background-image: url('reel.png'); 
+            background-size: 100% 2100%; 
+            background-repeat: no-repeat;
+            pointer-events: none; 
+        }
+
+        /* 3コマ赤枠（高さ80pxに合わせて計算） */
         .win-middle::after { content: ""; position: absolute; inset: 0; border: 8px solid #ff0044; z-index: 100; pointer-events: none; background: rgba(255, 0, 68, 0.1); }
         .win-upper::after { content: ""; position: absolute; inset: 0; border: 8px solid #ff0044; border-bottom: none; z-index: 100; pointer-events: none; }
         .win-lower::after { content: ""; position: absolute; inset: 0; border: 8px solid #ff0044; border-top: none; z-index: 100; pointer-events: none; }
 
-        .center-panel { flex-grow: 1; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+        .center-panel { flex-grow: 1; display: flex; flex-direction: column; gap: 12px; }
+        
+        /* 状態タブ：ガタつき防止（transparent border） */
         .state-tabs { display: flex; background: #222; border: 1px solid #444; border-radius: 4px; overflow: hidden; }
-        .state-tab { flex: 1; text-align: center; padding: 12px 0; font-size: 11px; cursor: pointer; color: #888; border-right: 1px solid #444; }
-        .state-tab.active { color: #fff; font-weight: bold; background: #d32f2f; }
-        
-        /* デバッグ表示エリア */
-        .debug-display { 
-            background: #333; padding: 10px; border-radius: 4px; 
-            display: flex; justify-content: space-around; align-items: center;
-            border: 1px solid #555; font-weight: bold; font-family: monospace;
+        .state-tab { 
+            flex: 1; text-align: center; 
+            padding: 18px 5px; font-size: 15px;
+            cursor: pointer; border-right: 1px solid #444; transition: 0.2s; 
+            display: flex; align-items: center; justify-content: center;
+            line-height: 1.2;
+            border-bottom: 4px solid transparent; /* 最初から透明な線を置く */
         }
-        .debug-item { text-align: center; }
-        .debug-label { font-size: 10px; color: #aaa; margin-bottom: 2px; }
-        .debug-val { font-size: 18px; color: #ff0044; }
-
-        .result-area { flex-grow: 1; background: #252526; border: 1px solid #444; border-radius: 4px; display: flex; flex-direction: column; overflow: hidden; }
-        .flag-list { flex-grow: 1; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
         
-        .flag-item { padding: 8px 12px; border-left: 5px solid #555; background: rgba(255,255,255,0.05); }
-        .c-rep { border-left-color: #00e5ff; color: #00e5ff; } 
-        .c-bell { border-left-color: #ffea00; color: #ffea00; } 
-        .c-suika { border-left-color: #00c853; color: #00c853; } 
-        .c-cher { border-left-color: #f50057; color: #f50057; }
-        .c-hazure { border-left-color: #bbb; color: #bbb; }
-        .c-tok { border-left-color: #536dfe; color: #536dfe; }
+        .tab-hazure { color: rgba(255, 255, 255, 0.3); background: rgba(255, 255, 255, 0.05); }
+        .tab-hazure.active { color: #000; background: #fff; font-weight: bold; border-bottom-color: #ccc; }
+        
+        .tab-x { color: rgba(83, 109, 254, 0.4); background: rgba(83, 109, 254, 0.1); }
+        .tab-x.active { color: #fff; background: #536dfe; font-weight: bold; border-bottom-color: #fff; }
+        
+        .tab-seven { color: rgba(245, 0, 87, 0.4); background: rgba(245, 0, 87, 0.1); }
+        .tab-seven.active { color: #fff; background: #f50057; font-weight: bold; border-bottom-color: #fff; }
+        
+        .tab-bar { color: rgba(255, 255, 255, 0.2); background: rgba(0, 0, 0, 0.4); }
+        .tab-bar.active { color: #fff; background: #000; font-weight: bold; border-bottom-color: #666; }
+
+        .result-area { background: #252526; border: 1px solid #444; border-radius: 4px; }
+        .flag-list { padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+        
+        /* 成立役リストの行全体の色付け */
+        .flag-item { padding: 10px 12px; border-radius: 4px; font-weight: bold; border-left: 6px solid rgba(0,0,0,0.3); }
+        
+        .c-rep { background: rgba(0, 229, 255, 0.15); color: #00e5ff; border-color: #00e5ff; } 
+        .c-bell { background: rgba(255, 234, 0, 0.15); color: #ffea00; border-color: #ffea00; } 
+        .c-suika { background: rgba(0, 200, 83, 0.15); color: #00c853; border-color: #00c853; } 
+        .c-cher { background: rgba(245, 0, 87, 0.15); color: #f50057; border-color: #f50057; }
+        .c-hazure { background: rgba(187, 187, 187, 0.1); color: #bbb; border-color: #bbb; }
+        .c-tok { background: rgba(170, 0, 255, 0.15); color: #aa00ff; border-color: #aa00ff; }
+
+        .flag-item small { color: #fff; font-weight: normal; margin-top: 4px; display: block; opacity: 0.9; }
     </style>
 </head>
 <body>
     <div class="main-container">
-        <div class="reel-area-wrapper">
+        <div class="reel-form-container">
             <div class="reel-column"><div id="left-reel"></div></div>
             <div class="right-wrapper">
                 <div class="reel-column"><div id="right-reel"></div></div>
             </div>
         </div>
+
         <div class="center-panel">
             <div class="state-tabs">
-                <div class="state-tab active" data-state="hazure" onclick="switchState('hazure')">未成立</div>
-                <div class="state-tab" data-state="x_flag" onclick="switchState('x_flag')">X成立</div>
-                <div class="state-tab" data-state="seven_flag" onclick="switchState('seven_flag')">７成立</div>
-                <div class="state-tab" data-state="bar_flag" onclick="switchState('bar_flag')">Reg成立</div>
-            </div>
-
-            <div class="debug-display">
-                <div class="debug-item"><div class="debug-label">UPPER</div><div id="val-up" class="debug-val">--</div></div>
-                <div class="debug-item"><div class="debug-label">MIDDLE</div><div id="val-mid" class="debug-val" style="font-size: 24px;">--</div></div>
-                <div class="debug-item"><div class="debug-label">LOWER</div><div id="val-low" class="debug-val">--</div></div>
+                <div class="state-tab tab-hazure active" data-state="hazure" onclick="switchState('hazure')">ボーナス<br>未成立</div>
+                <div class="state-tab tab-x" data-state="x_flag" onclick="switchState('x_flag')">Ｘビッグ<br>成立</div>
+                <div class="state-tab tab-seven" data-state="seven_flag" onclick="switchState('seven_flag')">７ビッグ<br>成立</div>
+                <div class="state-tab tab-bar" data-state="bar_flag" onclick="switchState('bar_flag')">Regボーナス<br>成立</div>
             </div>
 
             <div class="result-area">
@@ -80,7 +115,6 @@
     </div>
 
 <script>
-    // --- 神のデータ ---
     const FLAG_DEFS = [
         { k: "hazure", n: "ハズレ", c: "hazure" }, { k: "normal_rep", n: "通常リプレイ", c: "rep" },
         { k: "jac_rep", n: "JACリプレイ", c: "rep" }, { k: "rt_rep", n: "RTリプレイ", c: "rep" },
@@ -158,10 +192,15 @@
             const d = document.createElement('div');
             d.className = 'symbol'; d.id = 's-' + i;
             d.onclick = () => select(i);
-            const img = document.createElement('div'); img.className = 'symbol-image';
+            
+            const num = document.createElement('div'); 
+            num.className = 'index-num'; num.textContent = i;
+            
+            const img = document.createElement('div'); 
+            img.className = 'symbol-image';
             img.style.backgroundPosition = `0% ${(21 - i) * 5}%`;
-            const s = document.createElement('span'); s.className = 'index-num'; s.textContent = i;
-            d.appendChild(s); d.appendChild(img);
+            
+            d.appendChild(num); d.appendChild(img);
             (i >= 11 ? lRel : rRel).appendChild(d);
         }
         select(18);
@@ -169,7 +208,8 @@
 
     function switchState(s) {
         currentState = s;
-        document.querySelectorAll('.state-tab').forEach(e => e.classList.toggle('active', e.dataset.state === s));
+        document.querySelectorAll('.state-tab').forEach(e => e.classList.remove('active'));
+        document.querySelector(`[data-state="${s}"]`).classList.add('active');
         update();
     }
 
@@ -183,11 +223,6 @@
         document.getElementById('s-' + idx).classList.add('win-middle');
         document.getElementById('s-' + up).classList.add('win-upper');
         document.getElementById('s-' + low).classList.add('win-lower');
-
-        // デバッグ表示更新
-        document.getElementById('val-up').textContent = up;
-        document.getElementById('val-mid').textContent = idx;
-        document.getElementById('val-low').textContent = low;
 
         update();
     }
@@ -212,7 +247,7 @@
             if (matches.length > 0) {
                 const item = document.createElement('div');
                 item.className = `flag-item c-${f.c}`;
-                item.innerHTML = `<strong>${f.n}</strong><br><small>狙い: ${matches.map(m => `${m.n}[${m.slip}]`).join(', ')}</small>`;
+                item.innerHTML = `<div>${f.n}</div><small>狙い: ${matches.map(m => `${m.n}[${m.slip}]`).join(', ')}</small>`;
                 list.appendChild(item);
             }
         });
