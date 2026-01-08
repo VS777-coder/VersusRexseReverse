@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Versus Revise - 13-Row Layout</title>
+    <title>Versus Revise - Professional Layout</title>
     <style>
         * { box-sizing: border-box; }
         body { background-color: #121212; color: #fff; font-family: sans-serif; margin: 0; padding: 5px; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
-        /* 状態タブ：維持 */
         .state-tabs { display: flex; width: 100%; background: #222; border: 1px solid #444; border-radius: 4px; overflow: hidden; margin-bottom: 5px; flex-shrink: 0; }
         .state-tab { flex: 1; text-align: center; padding: 12px 2px; font-size: 11px; font-weight: bold; cursor: pointer; border-bottom: 3px solid transparent; }
         .tab-hazure.active { background: #eee; color: #000; }
@@ -18,7 +17,6 @@
 
         .main-content { display: flex; flex-direction: row-reverse; flex: 1; overflow: hidden; gap: 4px; width: 100%; }
 
-        /* 右側：7コマリールエリア（変更なし） */
         .reel-frame { 
             width: 100px; 
             height: 490px; 
@@ -36,38 +34,21 @@
         .symbol-image { flex-grow: 1; height: 100%; background-image: url('reel.png'); background-size: 100% 2100%; }
         .center-guide { position: absolute; top: 140px; left: 0; width: 100%; height: 210px; border: 3px solid #ff0000; background: rgba(255, 0, 0, 0.05); pointer-events: none; z-index: 10; box-shadow: inset 0 0 10px rgba(255, 0, 0, 0.3); }
 
-        /* 左側：13行ぴったりに調整 */
         .result-area { flex: 1; background: #1a1a1a; border: 1px solid #333; border-radius: 4px; overflow-y: auto; min-width: 0; }
-        .flag-list { 
-            padding: 2px; 
-            display: flex; 
-            flex-direction: column; 
-            height: 100%; /* 13行で埋めるための基準 */
-        }
+        .flag-list { padding: 2px; display: flex; flex-direction: column; height: 100%; }
         
         .flag-item { 
             display: flex; 
             align-items: center; 
-            height: calc(100% / 13); /* 13等分して画面を埋める */
-            min-height: 36px; /* 潰れすぎ防止 */
+            height: calc(100% / 13); 
+            min-height: 36px; 
             padding: 0 6px; 
             border-bottom: 1px solid #222;
             border-left: 5px solid rgba(0,0,0,0.5); 
         }
-        .flag-name { 
-            font-size: 15px; /* 文字を大きく */
-            font-weight: bold; 
-            width: 75px; 
-            flex-shrink: 0;
-        }
-        .flag-data { 
-            font-size: 14px; /* 数字を大きく */
-            color: #fff; 
-            font-family: monospace;
-            letter-spacing: 1px;
-        }
+        .flag-name { font-size: 15px; font-weight: bold; width: 75px; flex-shrink: 0; }
+        .flag-data { font-size: 14px; color: #fff; font-family: monospace; letter-spacing: 0px; }
 
-        /* 色定義 */
         .c-rep { border-left-color: #00e5ff; color: #00e5ff; background: rgba(0, 229, 255, 0.05); } 
         .c-bell { border-left-color: #ffea00; color: #ffea00; background: rgba(255, 234, 0, 0.05); } 
         .c-suika { border-left-color: #00c853; color: #00c853; background: rgba(0, 200, 83, 0.05); } 
@@ -168,8 +149,8 @@
             if (slips.length > 0) {
                 const item = document.createElement('div');
                 item.className = `flag-item c-${f.c}`;
-                // スベリ数[X]のみを並べて表示
-                item.innerHTML = `<div class="flag-name">${f.n}</div><div class="flag-data">${slips.join(', ')}</div>`;
+                // 指定の[4][3]形式で表示
+                item.innerHTML = `<div class="flag-name">${f.n}</div><div class="flag-data">${slips.join('')}</div>`;
                 list.appendChild(item);
             }
         });
