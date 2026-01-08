@@ -2,80 +2,72 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Versus Revise - Professional Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Versus Revise - Compact Edition</title>
     <style>
-        body { background-color: #121212; color: #fff; font-family: sans-serif; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
-        .main-container { width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 15px; }
+        /* 画面全体を固定してスクロールを減らす */
+        body { background-color: #121212; color: #fff; font-family: sans-serif; margin: 0; padding: 5px; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; }
+        .main-container { width: 100%; max-width: 450px; display: flex; flex-direction: column; gap: 8px; }
         
-        /* リールセクションの横並び調整 */
-        .reel-area { display: flex; justify-content: center; gap: 10px; background: #222; padding: 10px; border-radius: 8px; border: 1px solid #444; }
-        .reel-column { width: 110px; display: flex; flex-direction: column; background: #000; border: 2px solid #333; }
-        .middle-offset { margin-top: 40px; } /* 中リール演出用 */
-
-        .symbol { 
-            position: relative; height: 75px; width: 100%; 
-            display: flex; align-items: center; border-bottom: 1px solid #222; cursor: pointer;
-        }
-        .index-num { 
-            width: 25px; height: 100%; background: #1a1a1a; color: #ffd700; 
-            display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; border-right: 1px solid #333;
-        }
-        .symbol-image { flex-grow: 1; height: 100%; background-image: url('reel.png'); background-size: 100% 2100%; }
-
-        /* 赤枠の強調 */
-        .win-middle::after { content: ""; position: absolute; inset: 0; border: 4px solid #ff0044; z-index: 10; background: rgba(255, 0, 68, 0.1); }
-        .win-upper::after { content: ""; position: absolute; inset: 0; border: 4px solid #ff0044; border-bottom: none; z-index: 10; }
-        .win-lower::after { content: ""; position: absolute; inset: 0; border: 4px solid #ff0044; border-top: none; z-index: 10; }
-
-        /* 状態タブの改善（文字を絶対に見えるように） */
-        .state-tabs { display: flex; width: 100%; background: #222; border: 1px solid #444; border-radius: 6px; overflow: hidden; margin-bottom: 5px; }
+        /* 状態タブをさらにコンパクトに */
+        .state-tabs { display: flex; width: 100%; background: #222; border: 1px solid #444; border-radius: 4px; overflow: hidden; }
         .state-tab { 
-            flex: 1; text-align: center; padding: 15px 2px; font-size: 12px; font-weight: bold; cursor: pointer; 
-            transition: 0.2s; display: flex; align-items: center; justify-content: center; line-height: 1.3;
-            border-bottom: 4px solid transparent;
+            flex: 1; text-align: center; padding: 10px 2px; font-size: 11px; font-weight: bold; cursor: pointer; 
+            display: flex; align-items: center; justify-content: center; line-height: 1.2;
+            border-bottom: 3px solid transparent;
         }
-        
-        /* 未成立 */
         .tab-hazure { color: #aaa; background: #333; }
         .tab-hazure.active { color: #000; background: #eee; border-bottom-color: #fff; }
-        
-        /* X成立 */
         .tab-x { color: #536dfe; background: rgba(83, 109, 254, 0.15); }
         .tab-x.active { color: #fff; background: #304ffe; border-bottom-color: #fff; }
-        
-        /* 7成立 */
         .tab-seven { color: #f50057; background: rgba(245, 0, 87, 0.15); }
         .tab-seven.active { color: #fff; background: #d50000; border-bottom-color: #fff; }
-        
-        /* Reg成立 */
         .tab-bar { color: #fff; background: #444; }
         .tab-bar.active { color: #fff; background: #000; border-bottom-color: #777; }
 
-        /* リスト部分 */
-        .result-area { width: 100%; background: #1e1e1e; border: 1px solid #333; border-radius: 6px; }
-        .flag-list { padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+        /* リールエリア：高さを大幅カット */
+        .reel-area { display: flex; justify-content: center; gap: 8px; background: #1a1a1a; padding: 5px; border-radius: 4px; }
+        .reel-column { width: 90px; display: flex; flex-direction: column; background: #000; border: 2px solid #333; }
+        .middle-offset { margin-top: 27.5px; } /* 0.5コマ分オフセット */
+
+        .symbol { 
+            position: relative; height: 55px; width: 100%; /* 高さを55pxに圧縮 */
+            display: flex; align-items: center; border-bottom: 1px solid #222; cursor: pointer;
+        }
+        .index-num { 
+            width: 20px; height: 100%; background: #111; color: #ffd700; 
+            display: flex; align-items: center; justify-content: center; font-size: 10px; border-right: 1px solid #333;
+        }
+        .symbol-image { flex-grow: 1; height: 100%; background-image: url('reel.png'); background-size: 100% 2100%; }
+
+        /* 当たり枠（細く調整） */
+        .win-middle::after { content: ""; position: absolute; inset: 0; border: 3px solid #ff0044; z-index: 10; background: rgba(255, 0, 68, 0.1); }
+        .win-upper::after { content: ""; position: absolute; inset: 0; border: 3px solid #ff0044; border-bottom: none; z-index: 10; }
+        .win-lower::after { content: ""; position: absolute; inset: 0; border: 3px solid #ff0044; border-top: none; z-index: 10; }
+
+        /* リスト部分：1画面に収めるためにコンパクト化 */
+        .result-area { width: 100%; background: #1e1e1e; border: 1px solid #333; border-radius: 4px; max-height: 250px; overflow-y: auto; }
+        .flag-list { padding: 5px; display: flex; flex-direction: column; gap: 3px; }
         
-        .flag-item { padding: 10px; border-radius: 4px; border-left: 5px solid rgba(0,0,0,0.5); }
+        .flag-item { padding: 6px 10px; border-radius: 3px; border-left: 4px solid rgba(0,0,0,0.5); }
+        .flag-item div { font-size: 13px; font-weight: bold; }
+        .flag-item small { color: #ddd; font-size: 11px; }
+
         .c-rep { background: rgba(0, 229, 255, 0.1); color: #00e5ff; } 
         .c-bell { background: rgba(255, 234, 0, 0.1); color: #ffea00; } 
         .c-suika { background: rgba(0, 200, 83, 0.1); color: #00c853; } 
         .c-cher { background: rgba(245, 0, 87, 0.1); color: #f50057; }
-        .c-hazure { background: #333; color: #ccc; }
-        /* 特殊役：文字を紫、背景を少し明るくして見やすく */
+        .c-hazure { background: #2a2a2a; color: #ccc; }
         .c-tok { background: rgba(170, 0, 255, 0.15); color: #e040fb; }
-
-        .flag-item div { font-size: 15px; margin-bottom: 2px; }
-        .flag-item small { color: #ddd; font-size: 12px; }
     </style>
 </head>
 <body>
     <div class="main-container">
         <div class="state-tabs">
-            <div class="state-tab tab-hazure active" data-state="hazure" onclick="switchState('hazure')">ボーナス<br>未成立</div>
-            <div class="state-tab tab-x" data-state="x_flag" onclick="switchState('x_flag')">Ｘビッグ<br>成立</div>
-            <div class="state-tab tab-seven" data-state="seven_flag" onclick="switchState('seven_flag')">７ビッグ<br>成立</div>
-            <div class="state-tab tab-bar" data-state="bar_flag" onclick="switchState('bar_flag')">Regボーナス<br>成立</div>
+            <div class="state-tab tab-hazure active" data-state="hazure" onclick="switchState('hazure')">未成立</div>
+            <div class="state-tab tab-x" data-state="x_flag" onclick="switchState('x_flag')">Ｘ成立</div>
+            <div class="state-tab tab-seven" data-state="seven_flag" onclick="switchState('seven_flag')">７成立</div>
+            <div class="state-tab tab-bar" data-state="bar_flag" onclick="switchState('bar_flag')">Reg成立</div>
         </div>
 
         <div class="reel-area">
@@ -89,10 +81,10 @@
     </div>
 
 <script>
-    // ※ロジック部分は前のコードと同じため、そのまま動作します
+    // ロジック部分は変更なし
     const FLAG_DEFS = [
-        { k: "hazure", n: "ハズレ", c: "hazure" }, { k: "normal_rep", n: "通常リプレイ", c: "rep" },
-        { k: "jac_rep", n: "JACリプレイ", c: "rep" }, { k: "rt_rep", n: "RTリプレイ", c: "rep" },
+        { k: "hazure", n: "ハズレ", c: "hazure" }, { k: "normal_rep", n: "通常リプ", c: "rep" },
+        { k: "jac_rep", n: "JACリプ", c: "rep" }, { k: "rt_rep", n: "RTリプ", c: "rep" },
         { k: "bellA", n: "ベルA", c: "bell" }, { k: "bellB", n: "ベルB", c: "bell" },
         { k: "suikaA", n: "スイカA", c: "suika" }, { k: "suikaB", n: "スイカB", c: "suika" },
         { k: "cherA", n: "チェリーA", c: "cher" }, { k: "cherB", n: "チェリーB", c: "cher" },
