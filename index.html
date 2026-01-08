@@ -5,28 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Versus Revise - Right Hand Edition</title>
     <style>
+        /* 基本設定：はみ出し防止のためbox-sizingを徹底 */
+        * { box-sizing: border-box; }
         body { background-color: #121212; color: #fff; font-family: sans-serif; margin: 0; padding: 5px; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
-        /* 状態タブ：最上部 */
+        /* 状態タブ */
         .state-tabs { display: flex; width: 100%; background: #222; border: 1px solid #444; border-radius: 4px; overflow: hidden; margin-bottom: 5px; flex-shrink: 0; }
         .state-tab { flex: 1; text-align: center; padding: 12px 2px; font-size: 11px; font-weight: bold; cursor: pointer; border-bottom: 3px solid transparent; }
         .tab-hazure.active { background: #eee; color: #000; }
-        .tab-x { color: #536dfe; } .tab-x.active { background: #304ffe; color: #fff; }
-        .tab-seven { color: #f50057; } .tab-seven.active { background: #d50000; color: #fff; }
-        .tab-bar { color: #fff; } .tab-bar.active { background: #000; color: #fff; border-bottom-color: #777; }
+        .tab-x.active { background: #304ffe; color: #fff; }
+        .tab-seven.active { background: #d50000; color: #fff; }
+        .tab-bar.active { background: #000; color: #fff; border-bottom: 3px solid #777; }
 
-        /* メインエリア：左右入れ替えの設定 */
+        /* メインエリア：左右レイアウト */
         .main-content { 
             display: flex; 
-            flex-direction: row-reverse; /* ここで右リール・左リストを実現 */
+            flex-direction: row-reverse; /* 右リール・左リスト */
             flex: 1; 
             overflow: hidden; 
-            gap: 5px; 
+            gap: 4px; 
+            width: 100%;
         }
 
-        /* 右側（赤枠）：リール操作エリア */
+        /* 右側（赤枠）：リールエリア（幅を少し絞って右端を確保） */
         .reel-frame { 
-            width: 120px; /* 操作しやすい幅を確保 */
+            width: 110px; 
             height: 240px; 
             background: #000; 
             border: 2px solid #444; 
@@ -37,23 +40,24 @@
             touch-action: none;
         }
         .reel-window { height: 100%; display: flex; flex-direction: column; }
-        .symbol { height: 80px; display: flex; align-items: center; border-bottom: 1px solid #222; box-sizing: border-box; }
-        .index-num { width: 25px; color: #ffd700; text-align: center; font-size: 11px; font-weight: bold; }
+        .symbol { height: 80px; display: flex; align-items: center; border-bottom: 1px solid #222; }
+        .index-num { width: 22px; color: #ffd700; text-align: center; font-size: 10px; font-weight: bold; }
         .symbol-image { flex-grow: 1; height: 100%; background-image: url('reel.png'); background-size: 100% 2100%; }
         .center-line { position: absolute; top: 80px; left: 0; width: 100%; height: 80px; border-top: 2px solid #ffd700; border-bottom: 2px solid #ffd700; background: rgba(255, 215, 0, 0.08); pointer-events: none; z-index: 10; }
 
-        /* 左側（青枠）：結果リスト */
+        /* 左側（青枠）：結果リスト（字を小さく、パディングを調整） */
         .result-area { 
             flex: 1; 
             background: #1a1a1a; 
             border: 1px solid #333; 
             border-radius: 4px; 
-            overflow-y: auto; 
+            overflow-y: auto;
+            min-width: 0; /* flex内の子要素のはみ出し防止 */
         }
-        .flag-list { padding: 5px; display: flex; flex-direction: column; gap: 4px; }
-        .flag-item { padding: 8px; border-radius: 3px; border-left: 5px solid rgba(0,0,0,0.5); }
-        .flag-item div { font-size: 14px; font-weight: bold; }
-        .flag-item small { color: #ddd; font-size: 11px; }
+        .flag-list { padding: 4px; display: flex; flex-direction: column; gap: 3px; }
+        .flag-item { padding: 6px 4px; border-radius: 2px; border-left: 4px solid rgba(0,0,0,0.5); }
+        .flag-item div { font-size: 12px; font-weight: bold; margin-bottom: 2px; }
+        .flag-item small { color: #ccc; font-size: 10px; display: block; word-break: break-all; }
 
         /* 色定義 */
         .c-rep { background: rgba(0, 229, 255, 0.1); color: #00e5ff; } 
@@ -67,10 +71,10 @@
 <body>
 
     <div class="state-tabs">
-        <div class="state-tab tab-hazure active" data-state="hazure" onclick="switchState('hazure')">未成立</div>
-        <div class="state-tab tab-x" data-state="x_flag" onclick="switchState('x_flag')">Ｘ成立</div>
-        <div class="state-tab tab-seven" data-state="seven_flag" onclick="switchState('seven_flag')">７成立</div>
-        <div class="state-tab tab-bar" data-state="bar_flag" onclick="switchState('bar_flag')">Reg成立</div>
+        <div class="state-tab tab-hazure active" onclick="switchState('hazure')">未成立</div>
+        <div class="state-tab tab-x" onclick="switchState('x_flag')">Ｘ成立</div>
+        <div class="state-tab tab-seven" onclick="switchState('seven_flag')">７成立</div>
+        <div class="state-tab tab-bar" onclick="switchState('bar_flag')">Reg成立</div>
     </div>
 
     <div class="main-content">
@@ -85,6 +89,7 @@
     </div>
 
 <script>
+    // データ部分はそのまま維持
     const FLAG_DEFS = [
         { k: "hazure", n: "ハズレ", c: "hazure" }, { k: "normal_rep", n: "通常リプ", c: "rep" },
         { k: "jac_rep", n: "JACリプ", c: "rep" }, { k: "rt_rep", n: "RTリプ", c: "rep" },
@@ -124,7 +129,7 @@
 
     function switchState(s) {
         currentState = s;
-        document.querySelectorAll('.state-tab').forEach(t => t.classList.toggle('active', t.dataset.state === s));
+        document.querySelectorAll('.state-tab').forEach(t => t.classList.toggle('active', t.outerHTML.includes(s)));
         updateResults();
     }
 
@@ -132,10 +137,10 @@
         const win = document.getElementById('reel-window');
         win.innerHTML = '';
         [currentCenter + 1, currentCenter, currentCenter - 1].forEach((idx) => {
-            let realIdx = (idx > 21) ? 1 : (idx < 1) ? 21 : idx;
+            let r = (idx > 21) ? 1 : (idx < 1) ? 21 : idx;
             const d = document.createElement('div');
             d.className = 'symbol';
-            d.innerHTML = `<div class="index-num">${realIdx}</div><div class="symbol-image" style="background-position:0% ${(21-realIdx)*5}%"></div>`;
+            d.innerHTML = `<div class="index-num">${r}</div><div class="symbol-image" style="background-position:0% ${(21-r)*5}%"></div>`;
             win.appendChild(d);
         });
         updateResults();
@@ -149,17 +154,18 @@
             const table = dataSet[f.k];
             const matches = [];
             for (let n = 1; n <= 21; n++) {
-                let targetLow = (n === 1) ? 21 : n - 1;
-                const slip = table[21 - targetLow];
+                let low = (n === 1) ? 21 : n - 1;
+                const slip = table[21 - low];
                 if (slip === null) continue;
-                let stopMid = (targetLow + slip + 1);
-                while (stopMid > 21) stopMid -= 21;
-                if (stopMid === currentCenter) matches.push(`${n}[${slip}]`);
+                let mid = (low + slip + 1);
+                while (mid > 21) mid -= 21;
+                if (mid === currentCenter) matches.push(`${n}[${slip}]`);
             }
             if (matches.length > 0) {
                 const item = document.createElement('div');
                 item.className = `flag-item c-${f.c}`;
-                item.innerHTML = `<div>${f.n}</div><small>狙い: ${matches.join(', ')}</small>`;
+                // 「狙い：」を削除し、結果のみ表示
+                item.innerHTML = `<div>${f.n}</div><small>${matches.join(', ')}</small>`;
                 list.appendChild(item);
             }
         });
