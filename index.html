@@ -3,10 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Versus Revise - Professional Layout</title>
+    <title>Versus Revise - Professional Layout Fix</title>
     <style>
         * { box-sizing: border-box; }
-        body { background-color: #121212; color: #fff; font-family: sans-serif; margin: 0; padding: 5px; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        /* 左右の揺れを防止するため全体のoverflow-xを制御 */
+        body { 
+            background-color: #121212; color: #fff; font-family: sans-serif; 
+            margin: 0; padding: 5px; height: 100vh; overflow: hidden; 
+            display: flex; flex-direction: column; 
+            touch-action: pan-y; /* 全体でも左右スワイプを抑制 */
+        }
         
         .state-tabs { display: flex; width: 100%; background: #222; border: 1px solid #444; border-radius: 4px; overflow: hidden; margin-bottom: 5px; flex-shrink: 0; }
         .state-tab { flex: 1; text-align: center; padding: 12px 2px; font-size: 11px; font-weight: bold; cursor: pointer; border-bottom: 3px solid transparent; }
@@ -26,9 +32,10 @@
             overflow: hidden; 
             flex-shrink: 0;
             position: relative;
-            touch-action: none;
+            /* 修正：左右の動きをロックし、上下フリックのみ許可 */
+            touch-action: pan-y; 
         }
-        .reel-window { height: 100%; display: flex; flex-direction: column; }
+        .reel-window { height: 100%; display: flex; flex-direction: column; pointer-events: none; }
         .symbol { height: 70px; display: flex; align-items: center; border-bottom: 1px solid #1a1a1a; }
         .index-num { width: 20px; color: #ffd700; text-align: center; font-size: 9px; font-weight: bold; }
         .symbol-image { flex-grow: 1; height: 100%; background-image: url('reel.png'); background-size: 100% 2100%; }
@@ -47,7 +54,18 @@
             border-left: 5px solid rgba(0,0,0,0.5); 
         }
         .flag-name { font-size: 15px; font-weight: bold; width: 75px; flex-shrink: 0; }
-        .flag-data { font-size: 14px; color: #fff; font-family: monospace; letter-spacing: 0px; }
+        
+        /* 修正：滑りコマが2段にならないよう1行固定 */
+        .flag-data { 
+            font-size: 14px; 
+            color: #fff; 
+            font-family: monospace; 
+            letter-spacing: 0px; 
+            white-space: nowrap; 
+            overflow-x: auto; 
+            scrollbar-width: none;
+        }
+        .flag-data::-webkit-scrollbar { display: none; }
 
         .c-rep { border-left-color: #00e5ff; color: #00e5ff; background: rgba(0, 229, 255, 0.05); } 
         .c-bell { border-left-color: #ffea00; color: #ffea00; background: rgba(255, 234, 0, 0.05); } 
@@ -60,10 +78,10 @@
 <body>
 
     <div class="state-tabs">
-        <div class="state-tab tab-hazure active" onclick="switchState('hazure')">未成立</div>
-        <div class="state-tab tab-x" onclick="switchState('x_flag')">Ｘ成立</div>
-        <div class="state-tab tab-seven" onclick="switchState('seven_flag')">７成立</div>
-        <div class="state-tab tab-bar" onclick="switchState('bar_flag')">Reg成立</div>
+        <div id="tab-hazure" class="state-tab tab-hazure active" onclick="switchState('hazure')">未成立</div>
+        <div id="tab-x_flag" class="state-tab tab-x" onclick="switchState('x_flag')">Ｘ成立</div>
+        <div id="tab-seven_flag" class="state-tab tab-seven" onclick="switchState('seven_flag')">７成立</div>
+        <div id="tab-bar_flag" class="state-tab tab-bar" onclick="switchState('bar_flag')">Reg成立</div>
     </div>
 
     <div class="main-content">
@@ -84,13 +102,13 @@
         { k: "bellA", n: "ベルA", c: "bell" }, { k: "bellB", n: "ベルB", c: "bell" },
         { k: "suikaA", n: "スイカA", c: "suika" }, { k: "suikaB", n: "スイカB", c: "suika" },
         { k: "cherA", n: "チェリーA", c: "cher" }, { k: "cherB", n: "チェリーB", c: "cher" },
-        { k: "tokA", n: "特役A", c: "tok" }, { k: "tokB", n: "特役B", c: "tok" },
-        { k: "tokC", n: "特役C", c: "tok" }, { k: "tokD", n: "特役D", c: "tok" }, { k: "tokE", n: "特役E", c: "tok" }
+        { k: "tokA", n: "特殊役A", c: "tok" }, { k: "tokB", n: "特殊役B", c: "tok" },
+        { k: "tokC", n: "特殊役C", c: "tok" }, { k: "tokD", n: "特殊役D", c: "tok" }, { k: "tokE", n: "特殊役E", c: "tok" }
     ];
 
-    const GOD_DATA = { hazure: { hazure:[2,2,4,4,0,1,1,1,0,1,0,1,2,3,0,1,0,1,2,0,0], normal_rep:[0,1,2,3,4,0,1,0,1,2,0,1,2,3,4,0,1,0,1,2,3], jac_rep:[1,2,0,1,2,3,0,0,2,2,4,2,3,4,2,3,0,1,1,3,3], rt_rep:[0,1,2,3,4,0,0,1,1,2,0,1,2,3,4,0,0,1,1,2,3], bellA:[1,1,3,3,4,0,2,1,1,1,1,1,3,3,4,1,2,3,1,2,0], bellB:[1,1,3,3,4,0,2,1,1,1,1,1,3,3,4,1,2,3,1,2,0], suikaA:[2,1,4,3,0,0,1,1,4,0,2,2,4,4,0,1,1,2,2,3,1], suikaB:[2,1,4,3,0,0,1,1,4,0,2,2,4,4,0,1,1,2,2,3,1], cherA:[4,0,1,0,1,2,3,4,0,1,2,0,1,0,1,2,3,4,1,2,3], cherB:[4,0,1,0,1,2,3,4,0,1,2,0,1,0,1,2,3,4,1,2,3], tokA:Array(21).fill(null), tokB:Array(21).fill(null), tokC:Array(21).fill(null), tokD:Array(21).fill(null), tokE:Array(21).fill(null) }, x_flag: { hazure:[2,2,4,4,0,1,2,3,4,1,0,2,2,3,0,1,0,0,0,0,0], normal_rep:[0,1,2,3,4,0,1,2,3,4,0,4,2,3,4,0,1,0,3,2,3], jac_rep:[0,2,2,4,0,0,1,1,0,0,2,1,4,3,0,1,1,2,4,0,1], rt_rep:[0,1,2,3,4,0,1,0,1,2,0,1,2,3,4,0,1,0,1,2,3], bellA:[1,1,3,3,4,0,2,1,1,1,1,1,3,3,4,1,2,3,1,2,0], bellB:[1,1,2,4,0,1,1,2,4,0,2,4,2,4,0,1,2,3,4,2,1], suikaA:[2,3,4,4,0,1,2,3,4,0,2,2,4,4,0,1,0,1,2,3,1], suikaB:[2,3,4,4,0,1,2,3,4,0,2,2,4,4,0,1,0,1,2,3,1], cherA:[4,0,1,0,1,2,3,4,4,1,2,0,1,0,1,2,3,4,1,2,3], cherB:[4,0,1,0,1,2,3,4,4,1,2,0,1,0,1,2,3,4,1,2,3], tokA:[2,2,4,4,0,1,2,3,4,1,2,2,4,4,0,1,0,0,0,0,0], tokB:[2,2,4,4,0,1,2,3,4,1,0,2,2,3,0,1,0,0,0,0,0], tokC:[2,2,4,4,0,1,2,3,4,1,2,2,4,4,0,1,0,0,0,0,0], tokD:[1,4,3,4,0,1,2,3,4,2,2,2,2,4,0,0,0,1,1,3,3], tokE:[2,2,4,4,0,1,2,3,4,1,0,2,2,3,0,1,0,0,0,0,0] }, seven_flag: { hazure:[1,1,3,3,0,1,0,0,0,1,1,1,3,3,4,1,2,3,4,1,1], normal_rep:[0,1,2,3,4,0,1,0,1,2,0,1,2,3,4,0,1,0,1,2,3], jac_rep:[1,1,4,1,4,1,4,2,1,0,1,2,0,4,4,0,4,1,1,3,0], rt_rep:[0,1,2,3,4,0,1,0,1,2,0,1,2,3,4,0,0,0,1,2,3], bellA:[1,1,3,3,4,0,2,1,1,1,1,1,3,3,4,1,2,3,1,2,0], bellB:[2,2,4,4,0,1,1,1,0,1,0,1,2,3,0,1,0,1,2,0,0], suikaA:[2,1,4,3,0,0,1,1,1,1,2,2,4,4,0,1,1,2,2,3,1], suikaB:[2,1,4,3,0,0,1,1,1,1,2,2,4,4,0,1,1,2,2,3,1], cherA:[4,0,1,0,1,2,3,4,1,1,2,0,1,0,1,2,3,4,1,2,3], cherB:[4,0,1,0,1,2,3,4,1,1,2,0,1,0,1,2,3,4,1,2,3], tokA:[2,1,4,3,0,0,1,1,0,1,2,2,4,4,0,1,1,2,2,3,1], tokB:[1,3,3,4,0,1,0,1,0,1,1,1,3,3,4,1,0,1,2,1,1], tokC:[0,1,3,3,0,1,2,1,0,0,1,2,3,4,0,1,2,1,2,3,0], tokD:[2,3,3,4,4,1,2,1,0,0,1,2,3,4,4,1,0,1,2,3,0], tokE:[2,3,3,4,4,1,2,1,0,0,1,2,3,4,4,1,0,1,2,3,0] }, bar_flag: { hazure:[1,1,3,3,0,1,0,0,0,1,1,1,3,3,0,1,2,3,4,1,1], normal_rep:[0,1,2,3,4,0,1,0,1,2,0,1,2,3,4,0,1,0,1,2,3], jac_rep:[0,1,2,3,4,0,1,0,1,2,0,1,2,3,4,0,1,0,1,2,3], rt_rep:[0,1,2,3,4,0,1,0,1,2,0,1,2,3,4,0,1,0,1,2,3], bellA:[1,1,3,3,4,0,2,1,1,1,1,1,3,3,4,1,2,3,1,2,0], bellB:[1,1,2,4,0,1,1,2,4,0,0,4,2,3,0,1,2,3,4,2,1], suikaA:[2,1,4,3,0,0,1,1,0,0,2,2,4,4,0,1,2,3,4,3,1], suikaB:[2,1,4,3,0,0,1,1,0,0,2,2,4,4,0,1,2,3,4,3,1], cherA:[4,0,1,0,1,2,3,4,0,1,2,0,1,0,1,2,3,4,4,2,3], cherB:[4,0,1,0,1,2,3,4,0,1,2,0,1,0,1,2,3,4,4,2,3], tokA:[0,1,3,3,0,1,2,1,0,0,1,2,3,4,0,1,2,3,4,3,1], tokB:[2,3,3,4,0,1,2,1,0,0,1,2,3,4,0,1,0,1,2,3,1], tokC:[0,1,3,3,0,1,2,1,0,0,1,2,3,4,0,1,2,3,4,3,0], tokD:[2,2,4,4,0,1,2,3,0,1,0,2,3,3,0,1,0,0,0,3,0], tokE:[2,3,3,4,0,1,2,1,0,0,1,2,3,4,0,1,0,1,2,3,0] } };
+    const GOD_DATA = { hazure: { hazure:[2,2,4,4,0,1,1,1,0,1,0,1,2,3,0,1,0,1,2,0,0], normal_rep:[0,1,2,3,4,0,1,0,1,2,0,1,2,3,4,0,1,0,1,2,3], jac_rep:[1,2,0,1,2,3,0,0,2,2,4,2,3,4,2,3,0,1,1,3,3], rt_rep:[0,1,2,3,4,0,0,1,1,2,0,1,2,3,4,0,0,1,1,2,3], bellA:[1,1,3,3,4,0,2,1,1,1,1,1,3,3,4,1,2,3,1,2,0], bellB:[1,1,3,3,4,0,2,1,1,1,1,1,3,3,4,1,2,3,1,2,0], suikaA:[2,1,4,3,0,0,1,1,4,0,2,2,4,4,0,1,1,2,2,3,1], suikaB:[2,1,4,3,0,0,1,1,4,0,2,2,4,4,0,1,1,2,2,3,1], cherA:[4,0,1,0,1,2,3,4,0,1,2,0,1,0,1,2,3,4,1,2,3], cherB:[4,0,1,0,1,2,3,4,0,1,2,0,1,0,1,2,3,4,1,2,3], tokA:Array(21).fill(null), tokB:Array(21).fill(null), tokC:Array(21).fill(null), tokD:Array(21).fill(null), tokE:Array(21).fill(null) }, x_flag: { hazure:[2,2,4,4,0,1,2,3,4,1,0,2,2,3,0,1,0,0,0,0,0], normal_rep:[0,1,2,3,4,0,1,2,3,4,0,4,2,3,4,0,1,0,3,2,3], jac_rep:[0,2,2,4,0,0,1,1,0,0,2,1,4,3,0,1,1,2,4,0,1], rt_rep:[0,1,2,3,4,0,1,0,1,2,0,1,2,3,4,0,1,0,1,2,3], bellA:[1,1,3,3,4,0,2,1,1,1,1,1,3,3,4,1,2,3,1,2,0], bellB:[1,1,2,4,0,1,1,2,4,0,2,4,2,4,0,1,2,3,4,2,1], suikaA:[2,3,4,4,0,1,2,3,4,0,2,2,4,4,0,1,0,1,2,3,1], suikaB:[2,3,4,4,0,1,2,3,4,0,2,2,4,4,0,1,0,1,2,3,1], cherA:[4,0,1,0,1,2,3,4,4,1,2,0,1,0,1,2,3,4,1,2,3], cherB:[4,0,1,0,1,2,3,4,4,1,2,0,1,0,1,2,3,4,1,2,3], tokA:[2,2,4,4,0,1,2,3,4,1,2,2,4,4,0,1,0,0,0,0,0], tokB:[2,2,4,4,0,1,2,3,4,1,0,2,2,3,0,1,0,0,0,0,0], tokC:[2,2,4,4,0,1,2,3,4,1,2,2,4,4,0,1,0,0,0,0,0], tokD:[1,4,3,4,0,1,2,3,4,2,2,2,2,4,0,0,0,1,1,3,3], tokE:[2,2,4,4,0,1,2,3,4,1,0,2,2,3,0,1,0,0,0,0,0] }, seven_flag: { hazure:[1,1,3,3,0,1,0,0,0,1,1,1,3,3,4,1,2,3,4,1,1], normal_rep:[0,1,2,3,4,0,1,0,1,2,0,1,2,3,4,0,1,0,1,2,3], jac_rep:[1,1,4,1,4,1,4,2,1,0,1,2,0,4,4,0,4,1,1,3,0], rt_rep:[0,1,2,3,4,0,1,0,1,2,0,1,2,3,4,0,0,0,1,2,3], bellA:[1,1,3,3,4,0,2,1,1,1,1,1,3,3,4,1,2,3,1,2,0], bellB:[2,2,4,4,0,1,1,1,0,1,0,1,2,3,0,1,0,1,2,0,0], suikaA:[2,1,4,3,0,0,1,1,1,1,2,2,4,4,0,1,1,2,2,3,1], suikaB:[2,1,4,3,0,0,1,1,1,1,2,2,4,4,0,1,1,2,2,3,1], cherA:[4,0,1,0,1,2,3,4,1,1,2,0,1,0,1,2,3,4,1,2,3], cherB:[4,0,1,0,1,2,3,4,1,1,2,0,1,0,1,2,3,4,1,2,3], tokA:[2,1,4,3,0,0,1,1,0,1,2,2,4,4,0,1,1,2,2,3,1], tokB:[1,3,3,4,0,1,0,1,0,1,1,1,3,3,4,1,0,1,2,1,1], tokC:[0,1,3,3,0,1,2,1,0,0,1,2,3,4,0,1,2,1,2,3,0], tokD:[2,3,3,4,4,1,2,1,0,0,1,2,3,4,4,1,0,1,2,3,0], tokE:[2,3,3,4,4,1,2,1,0,0,1,2,3,4,4,1,0,1,2,3,0] }, bar_flag: { hazure:[1,1,3,3,0,1,0,0,0,1,1,1,3,3,0,1,2,3,4,1,1], normal_rep:[0,1,2,3,4,0,1,0,1,2,0,1,2,3,4,0,1,0,1,2,3], jac_rep:[0,1,2,3,4,0,1,0,1,2,0,1,2,3,4,0,1,0,1,2,3], rt_rep:[0,1,2,3,4,0,1,0,1,2,0,1,2,3,4,0,1,0,1,2,3], bellA:[1,1,3,3,4,0,2,1,1,1,1,1,3,3,4,1,2,3,1,2,0], bellB:[1,1,2,4,0,1,1,2,4,0,0,4,2,3,0,1,2,3,4,2,1], suikaA:[2,1,4,3,0,0,1,1,0,0,2,2,4,4,0,1,2,3,4,3,1], suikaB:[2,1,4,3,0,0,1,1,0,0,2,2,4,4,0,1,2,3,4,3,1], cherA:[4,0,1,0,1,2,3,4,0,1,2,0,1,0,1,2,3,4,4,2,3], cherB:[4,0,1,0,1,2,3,4,0,1,2,0,1,0,1,2,3,4,4,2,3], tokA:[0,1,3,3,0,1,2,1,0,0,1,2,3,4,0,1,2,3,4,3,1], tokB:[2,3,3,4,0,1,2,1,0,0,1,2,3,4,0,1,0,1,2,3,1], tokC:[0,1,3,3,0,1,2,1,0,0,1,2,3,4,0,1,2,3,4,3,0], tokD:[2,2,4,4,0,1,2,3,0,1,0,2,3,3,0,1,0,0,0,3,0], tokE:[2,3,3,4,0,1,2,1,0,0,1,2,3,4,0,1,0,1,2,3,1] } };
 
-    let currentState = 'hazure', currentCenter = 18;
+    let currentState = 'hazure', currentCenter = 15;
     let startY = 0;
 
     function init() {
@@ -112,7 +130,8 @@
 
     function switchState(s) {
         currentState = s;
-        document.querySelectorAll('.state-tab').forEach(t => t.classList.toggle('active', t.outerHTML.includes(s)));
+        document.querySelectorAll('.state-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-' + s).classList.add('active');
         updateResults();
     }
 
@@ -139,17 +158,15 @@
             const table = dataSet[f.k];
             const slips = [];
             for (let n = 1; n <= 21; n++) {
-                let low = (n === 1) ? 21 : n - 1;
-                const slip = table[21 - low];
+                const slip = table[n-1];
                 if (slip === null) continue;
-                let mid = (low + slip + 1);
-                while (mid > 21) mid -= 21;
-                if (mid === currentCenter) slips.push(`[${slip}]`);
+                let stop = n + slip;
+                while (stop > 21) stop -= 21;
+                if (stop === currentCenter) slips.push(`[${slip}]`);
             }
             if (slips.length > 0) {
                 const item = document.createElement('div');
                 item.className = `flag-item c-${f.c}`;
-                // 指定の[4][3]形式で表示
                 item.innerHTML = `<div class="flag-name">${f.n}</div><div class="flag-data">${slips.join('')}</div>`;
                 list.appendChild(item);
             }
